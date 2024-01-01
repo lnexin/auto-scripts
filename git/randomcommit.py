@@ -13,10 +13,10 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36",
     "Connection": "close",
 }
-wallpaper_path = "/Users/xind/Pictures/wallpaper"
+wallpaper_path = "/home/xind/workspace/auto-scripts"
 
 # git
-git_repo_path = "/Users/xind/projects/idea/auto-scripts"
+git_repo_path = "/home/xind/workspace/auto-scripts"
 
 
 def dump_bing_wp():
@@ -98,10 +98,11 @@ def bad_task():
     return 1 / 0
 
 
-# schedule.every(10).seconds.do(job)
-schedule.every(4).hours.do(bad_task)
+#schedule.every(10).seconds.do(job)
+schedule.every(2).hours.do(bad_task)
 
 while True:
+    #print("schedule running ...")
     schedule.run_pending()
-    print("schedule running ...")
+    # print("schedule running ...")
     time.sleep(1)
