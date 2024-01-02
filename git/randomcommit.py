@@ -14,9 +14,18 @@ headers = {
     "Connection": "close",
 }
 wallpaper_path = "/Users/xind/projects/idea/auto-scripts"
+# wallpaper_path = "//home/xind/workspace/auto-scripts"
 
 # git
 git_repo_path = "/Users/xind/projects/idea/auto-scripts"
+# git_repo_path = "/home/xind/workspace/auto-scripts"
+
+# all execute count
+execute_count = 1
+
+# every day limit
+current_day = ''
+current_day_count = 2
 
 
 def dump_bing_wp():
@@ -44,7 +53,7 @@ def dump_bing_wp():
     return name
 
 
-def random_commit(t):
+def execute_commit(t):
     repo = git.Repo(git_repo_path)
     # update
     repo.git.pull()
@@ -65,15 +74,40 @@ def random_commit(t):
 
 
 def job():
+    global execute_count
+    global current_day, current_day_count
+
     t = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+
+    # every day limit
+    if current_day_count > 5:
+        print("{} - every day limit. day: {}, day-total: {}".format(t, current_day, current_day_count))
+        return False
+
+    # touch every count limit
+    cu_day = time.strftime('%Y%m%d', time.localtime())
+    if current_day == '' or current_day is None:
+        current_day = cu_day
+    if current_day != cu_day and current_day_count >= 5:
+        current_day = cu_day
+
+    print("{} - execute task, count: {}, day: {}, day-total: {}".format(t, execute_count, current_day,
+                                                                        current_day_count))
+    # main job start --------------------------
     r = random.Random()
     r_int = r.randint(1, 100)
     if r_int > 50:
-        print(t, " - random percent: ", r_int, "%, execute auto-commit ...")
+        print('{} - {}%, execute auto-commit...'.format(t, r_int))
 
-        random_commit(t)
+        # random_commit(t)
+
+        if current_day == cu_day:
+            current_day_count += 1
     else:
-        print(t, " - random percent: ", r_int, "%, terminal process.")
+        print('{} - {}%, terminal.'.format(t, r_int))
+    # main job end --------------------------
+
+    execute_count += 1
 
 
 def catch_exceptions(cancel_on_failure=False):
@@ -81,7 +115,6 @@ def catch_exceptions(cancel_on_failure=False):
         @functools.wraps(job_func)
         def wrapper(*args, **kwargs):
             try:
-                # job()
                 return job_func(*args, **kwargs)
             except:
                 import traceback
@@ -96,8 +129,6 @@ def catch_exceptions(cancel_on_failure=False):
 
 @catch_exceptions(cancel_on_failure=False)
 def bad_task():
-    t = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-    print(t, " - will execute schedule task...")
     job()
     return True
 
