@@ -13,10 +13,10 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36",
     "Connection": "close",
 }
-wallpaper_path = "/home/xind/workspace/auto-scripts"
+wallpaper_path = "/Users/xind/projects/idea/auto-scripts"
 
 # git
-git_repo_path = "/home/xind/workspace/auto-scripts"
+git_repo_path = "/Users/xind/projects/idea/auto-scripts"
 
 
 def dump_bing_wp():
@@ -63,16 +63,17 @@ def random_commit(t):
     repo.git.push()
     print(t, " - push successful.")
 
+
 def job():
     t = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
     r = random.Random()
     r_int = r.randint(1, 100)
     if r_int > 50:
-        print(t, " - random: ", r_int, ", will commit ...")
+        print(t, " - random percent: ", r_int, "%, execute auto-commit ...")
 
         random_commit(t)
     else:
-        print(t, " - random: ", r_int, "， not commit.")
+        print(t, " - random percent: ", r_int, "%, terminal process.")
 
 
 def catch_exceptions(cancel_on_failure=False):
@@ -80,7 +81,7 @@ def catch_exceptions(cancel_on_failure=False):
         @functools.wraps(job_func)
         def wrapper(*args, **kwargs):
             try:
-                job()
+                # job()
                 return job_func(*args, **kwargs)
             except:
                 import traceback
@@ -95,14 +96,15 @@ def catch_exceptions(cancel_on_failure=False):
 
 @catch_exceptions(cancel_on_failure=False)
 def bad_task():
-    return 1 / 0
+    t = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+    print(t, " - will execute schedule task...")
+    job()
+    return True
 
 
-#schedule.every(10).seconds.do(job)
-schedule.every(2).hours.do(bad_task)
+schedule.every().second.do(bad_task)
+# schedule.every(2).hours.do(bad_task)
 
 while True:
-    #print("schedule running ...")
     schedule.run_pending()
-    # print("schedule running ...")
-    time.sleep(1)
+    time.sleep(10)
