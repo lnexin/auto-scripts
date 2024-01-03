@@ -1,5 +1,6 @@
 # import os
 import functools
+import logging
 import os
 import random
 import schedule
@@ -13,19 +14,21 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36",
     "Connection": "close",
 }
-wallpaper_path = "/Users/xind/projects/idea/auto-scripts"
-# wallpaper_path = "//home/xind/workspace/auto-scripts"
+
+LOG_FORMAT = "%(asctime)s [%(levelname)7s:%(lineno)-3d]: %(message)s"
+# 对logger进行配置——日志等级&输出格式
+logging.basicConfig(filename='./log.log', level=logging.INFO, format=LOG_FORMAT)
 
 # git
-git_repo_path = "/Users/xind/projects/idea/auto-scripts"
-# git_repo_path = "/home/xind/workspace/auto-scripts"
+#git_repo_path = "/Users/xind/projects/idea/auto-scripts"
+git_repo_path = "/home/xind/workspace/auto-scripts"
 
 # all execute count
 execute_count = 1
 
 # every day limit
 current_day = ''
-current_day_count = 2
+current_day_count = 1
 
 
 def dump_bing_wp():
@@ -53,37 +56,32 @@ def dump_bing_wp():
     return name
 
 
-def execute_commit(t):
+def execute_commit():
     repo = git.Repo(git_repo_path)
     # update
     repo.git.pull()
 
     # get pict
     name = dump_bing_wp()
-
     if name is None:
-        print(t, " - name: ", name, " invalid, not commit.")
+        logging.warning("{}, name is None, not commit".format(name))
         return
 
     repo.git.add(A=True)
-
     repo.git.commit(m="add {}".format(name))
-    print(t, " - will commit: ", name)
+    logging.info("will commit: {}".format(name))
     repo.git.push()
-    print(t, " - push successful.")
+    logging.info("push successful")
 
 
 def job():
     global execute_count
     global current_day, current_day_count
 
-    t = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-
     # every day limit
     if current_day_count > 5:
-        print("{} - every day limit. day: {}, day-total: {}".format(t, current_day, current_day_count))
+        logging.warning("every day limit. day: {}, day-total: {}".format(current_day, current_day_count))
         return False
-
     # touch every count limit
     cu_day = time.strftime('%Y%m%d', time.localtime())
     if current_day == '' or current_day is None:
@@ -91,22 +89,18 @@ def job():
     if current_day != cu_day and current_day_count >= 5:
         current_day = cu_day
 
-    print("{} - execute task, count: {}, day: {}, day-total: {}".format(t, execute_count, current_day,
-                                                                        current_day_count))
+    logging.info("execute task, count: {}, day: {}, day-total: {}".format(execute_count, current_day, current_day_count))
     # main job start --------------------------
     r = random.Random()
     r_int = r.randint(1, 100)
     if r_int > 50:
-        print('{} - {}%, execute auto-commit...'.format(t, r_int))
-
-        # random_commit(t)
-
+        logging.info('{}%, execute auto-commit...'.format(r_int))
+        execute_commit()
         if current_day == cu_day:
             current_day_count += 1
     else:
-        print('{} - {}%, terminal.'.format(t, r_int))
+        logging.info('{}%, terminal.'.format(r_int))
     # main job end --------------------------
-
     execute_count += 1
 
 
@@ -118,7 +112,8 @@ def catch_exceptions(cancel_on_failure=False):
                 return job_func(*args, **kwargs)
             except:
                 import traceback
-                print(traceback.format_exc())
+                logging.error("error: {}".format(traceback.format_exc()))
+                # print(traceback.format_exc())
                 if cancel_on_failure:
                     return schedule.CancelJob
 
@@ -133,9 +128,12 @@ def bad_task():
     return True
 
 
-schedule.every().second.do(bad_task)
-# schedule.every(2).hours.do(bad_task)
+# schedule.every().second.do(bad_task)
+# 每隔10秒钟执行一次
+# schedule.every(1).minute.at(":02").do(bad_task)
+# 每过2个小时的12分执行
+schedule.every(2).hours.at(":12").do(bad_task)
 
 while True:
     schedule.run_pending()
-    time.sleep(10)
+    time.sleep(1)
