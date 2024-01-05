@@ -2,7 +2,7 @@
 echo "start random commit task..."
 > log.log
 #python3 ./randomcommit.py > run.log &
-nohup python3 -u ./randomcommit.py &
+nohup python3 -u ./randomcommit.py > /dev/null 2>&1 &
 #nohup python3 -u ./randomcommit.py > log.log 2>&1 &
 
 # nohup python -u Job.py > log.log 2>&1 &
