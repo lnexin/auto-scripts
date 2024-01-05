@@ -130,7 +130,7 @@ def bad_task():
 
 # schedule.every().second.do(bad_task)
 # 每隔10秒钟执行一次
-# schedule.every(1).minute.at(":02").do(bad_task)
+#schedule.every(1).minute.at(":02").do(bad_task)
 # 每过2个小时的12分执行
 schedule.every(2).hours.at(":12").do(bad_task)
 
