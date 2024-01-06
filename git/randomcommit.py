@@ -68,7 +68,7 @@ def execute_commit():
         return
 
     repo.git.add(A=True)
-    repo.git.commit(m="add {}".format(name))
+    repo.git.commit(m="'add {}'".format(name))
     logging.info("will commit: {}".format(name))
     repo.git.push()
     logging.info("push successful")
