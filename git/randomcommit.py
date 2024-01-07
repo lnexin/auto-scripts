@@ -20,8 +20,8 @@ LOG_FORMAT = "%(asctime)s [%(levelname)7s:%(lineno)-3d]: %(message)s"
 logging.basicConfig(filename='./log.log', level=logging.INFO, format=LOG_FORMAT)
 
 # git
-#git_repo_path = "/Users/xind/projects/idea/auto-scripts"
-git_repo_path = "/home/xind/workspace/auto-scripts"
+git_repo_path = "/Users/xind/projects/idea/auto-scripts"
+# git_repo_path = "/home/xind/workspace/auto-scripts"
 
 # all execute count
 execute_count = 1
@@ -128,11 +128,11 @@ def bad_task():
     return True
 
 
-# schedule.every().second.do(bad_task)
+schedule.every(10).second.do(bad_task)
 # 每隔10秒钟执行一次
 #schedule.every(1).minute.at(":02").do(bad_task)
 # 每过2个小时的12分执行
-schedule.every(2).hours.at(":12").do(bad_task)
+# schedule.every(2).hours.at(":12").do(bad_task)
 
 while True:
     schedule.run_pending()
