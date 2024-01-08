@@ -24,7 +24,7 @@ execute_count = 1
 # every day limit
 current_day = ''
 current_day_count = 1
-current_day_limit = 3
+current_day_limit = 5
 
 
 def dump_bing_wp():
@@ -49,11 +49,13 @@ def dump_bing_wp():
     name = '{}.jpg'.format(dt + "_" + desc)
     # 如果次数小于3次name加时间戳
     if os.path.exists(output + name):
-        if current_day_count < current_day_limit:
-            name = '{}_{}_{}.jpg'.format(dt, desc, current_day_count)
-        else:
-            print("{}-{} exists".format(dt, desc))
-            return "exists"
+        # if current_day_count < current_day_limit:
+        #     name = '{}_{}_{}.jpg'.format(dt, desc, current_day_count)
+        # else:
+        #     print("{}-{} exists".format(dt, desc))
+        #     return "exists"
+        print("{}-{} exists, discard this picture save  ".format(dt, desc))
+        return "exists"
 
     out = open(output + name, 'wb')
     out.write(img)
@@ -75,7 +77,7 @@ def execute_commit():
         return False
 
     repo.git.add(A=True)
-    #repo.git.commit(" -m {}".format(name))
+    # repo.git.commit(" -m {}".format(name))
     repo.git.execute(["git", "commit", "-m", "add-{}".format(name)])
     print("will commit: {}".format(name))
     repo.git.push()
@@ -118,14 +120,15 @@ def job():
         current_day_count = 1
         print("{} - touch every count limit. day: {}, day-total: {}".format(ts, current_day, current_day_count))
 
-    print("{} - execute task, count: {}, day: {}, day-total: {}".format(ts,execute_count, current_day, current_day_count))
+    print("{} - execute task, count: {}, day: {}, day-total: {}".format(ts, execute_count, current_day,
+                                                                        current_day_count))
     # main job start --------------------------
     r = random.Random()
     r_int = r.randint(1, 100)
     if r_int > 50:
         print('{} - {}%, execute auto-commit...'.format(ts, r_int))
         rlt = execute_commit()
-        #rlt = True
+        # rlt = True
         if rlt:
             current_day_count += 1
     else:
@@ -135,7 +138,7 @@ def job():
     return True
 
 
-#schedule.every(10).seconds.do(job)
+# schedule.every(10).seconds.do(job)
 # 每隔10秒钟执行一次
 # schedule.every(1).minute.at(":02").do(job)
 # 每过2个小时的12分执行
