@@ -2,9 +2,9 @@
 echo "start random commit task..."
 > log.log
 #python3 ./randomcommit.py > run.log &
-nohup python3 -u ./randomcommit.py > /dev/null 2>&1 &
-#nohup python3 -u ./randomcommit.py > log.log 2>&1 &
-
+#nohup python3 -u ./randomcommit.py > /dev/null 2>&1 &
+nohup python3 -u ./randomcommit.py > log.log 2>&1 &
+echo "random commit task start completed."
 # nohup python -u Job.py > log.log 2>&1 &
 # 说明：
 # 末尾的 &：表示后台运行程序
