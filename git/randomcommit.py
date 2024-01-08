@@ -1,13 +1,12 @@
-# import os
 import functools
-import logging
+import json
 import os
 import random
-import schedule
 import time
+
 import git
 import requests
-import json
+import schedule
 
 # bing
 headers = {
@@ -15,13 +14,9 @@ headers = {
     "Connection": "close",
 }
 
-LOG_FORMAT = "%(asctime)s [%(levelname)7s:%(lineno)-3d]: %(message)s"
-# 对logger进行配置——日志等级&输出格式
-logging.basicConfig(filename='./log.log', level=logging.INFO, format=LOG_FORMAT)
-
 # git
-git_repo_path = "/Users/xind/projects/idea/auto-scripts"
-# git_repo_path = "/home/xind/workspace/auto-scripts"
+# git_repo_path = "/Users/xind/projects/idea/auto-scripts"
+git_repo_path = "/home/xind/workspace/auto-scripts"
 
 # all execute count
 execute_count = 1
@@ -29,6 +24,7 @@ execute_count = 1
 # every day limit
 current_day = ''
 current_day_count = 1
+current_day_limit = 3
 
 
 def dump_bing_wp():
@@ -45,11 +41,19 @@ def dump_bing_wp():
     desc = str(json_data['images'][0]['copyright']).split("，")[0]
     dt = json_data['images'][0]['startdate']
 
+    desc = str.replace(desc, "/", "_").replace(" ", "_")
     # output path
     output = git_repo_path + '/bingwp/'
     if not os.path.exists(output):
         os.mkdir(output)
     name = '{}.jpg'.format(dt + "_" + desc)
+    # 如果次数小于3次name加时间戳
+    if os.path.exists(output + name):
+        if current_day_count < current_day_limit:
+            name = '{}_{}_{}.jpg'.format(dt, desc, current_day_count)
+        else:
+            print("{}-{} exists".format(dt, desc))
+            return "exists"
 
     out = open(output + name, 'wb')
     out.write(img)
@@ -64,44 +68,19 @@ def execute_commit():
     # get pict
     name = dump_bing_wp()
     if name is None:
-        logging.warning("{}, name is None, not commit".format(name))
-        return
+        print("{}, name is None, not commit".format(name))
+        return False
+    if name == "exists":
+        print("{}, exists, not commit".format(name))
+        return False
 
     repo.git.add(A=True)
-    repo.git.commit(m="'add {}'".format(name))
-    logging.info("will commit: {}".format(name))
+    #repo.git.commit(" -m {}".format(name))
+    repo.git.execute(["git", "commit", "-m", "add-{}".format(name)])
+    print("will commit: {}".format(name))
     repo.git.push()
-    logging.info("push successful")
-
-
-def job():
-    global execute_count
-    global current_day, current_day_count
-
-    # every day limit
-    if current_day_count > 5:
-        logging.warning("every day limit. day: {}, day-total: {}".format(current_day, current_day_count))
-        return False
-    # touch every count limit
-    cu_day = time.strftime('%Y%m%d', time.localtime())
-    if current_day == '' or current_day is None:
-        current_day = cu_day
-    if current_day != cu_day and current_day_count >= 5:
-        current_day = cu_day
-
-    logging.info("execute task, count: {}, day: {}, day-total: {}".format(execute_count, current_day, current_day_count))
-    # main job start --------------------------
-    r = random.Random()
-    r_int = r.randint(1, 100)
-    if r_int > 50:
-        logging.info('{}%, execute auto-commit...'.format(r_int))
-        execute_commit()
-        if current_day == cu_day:
-            current_day_count += 1
-    else:
-        logging.info('{}%, terminal.'.format(r_int))
-    # main job end --------------------------
-    execute_count += 1
+    print("push successful")
+    return True
 
 
 def catch_exceptions(cancel_on_failure=False):
@@ -112,8 +91,7 @@ def catch_exceptions(cancel_on_failure=False):
                 return job_func(*args, **kwargs)
             except:
                 import traceback
-                logging.error("error: {}".format(traceback.format_exc()))
-                # print(traceback.format_exc())
+                print(traceback.format_exc())
                 if cancel_on_failure:
                     return schedule.CancelJob
 
@@ -123,16 +101,45 @@ def catch_exceptions(cancel_on_failure=False):
 
 
 @catch_exceptions(cancel_on_failure=False)
-def bad_task():
-    job()
+def job():
+    global execute_count
+    global current_day, current_day_count
+
+    ts = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+
+    # every day limit
+    if current_day_count >= current_day_limit:
+        print("{} - every day limit. day: {}, day-total: {}".format(ts, current_day, current_day_count))
+        return False
+    # touch every count limit
+    cu_day = time.strftime('%Y%m%d', time.localtime())
+    if current_day == '' or current_day is None or current_day != cu_day:
+        current_day = cu_day
+        current_day_count = 1
+        print("{} - touch every count limit. day: {}, day-total: {}".format(ts, current_day, current_day_count))
+
+    print("{} - execute task, count: {}, day: {}, day-total: {}".format(ts,execute_count, current_day, current_day_count))
+    # main job start --------------------------
+    r = random.Random()
+    r_int = r.randint(1, 100)
+    if r_int > 50:
+        print('{} - {}%, execute auto-commit...'.format(ts, r_int))
+        rlt = execute_commit()
+        #rlt = True
+        if rlt:
+            current_day_count += 1
+    else:
+        print('{} - {}%, terminal.'.format(ts, r_int))
+    # main job end --------------------------
+    execute_count += 1
     return True
 
 
-schedule.every(10).second.do(bad_task)
+#schedule.every(10).seconds.do(job)
 # 每隔10秒钟执行一次
-#schedule.every(1).minute.at(":02").do(bad_task)
+# schedule.every(1).minute.at(":02").do(job)
 # 每过2个小时的12分执行
-# schedule.every(2).hours.at(":12").do(bad_task)
+schedule.every(2).hours.at(":12").do(job)
 
 while True:
     schedule.run_pending()
