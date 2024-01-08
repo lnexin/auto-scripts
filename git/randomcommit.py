@@ -24,6 +24,7 @@ execute_count = 1
 # every day limit
 current_day = ''
 current_day_count = 1
+current_day_limit = 3
 
 
 def dump_bing_wp():
@@ -48,7 +49,7 @@ def dump_bing_wp():
     name = '{}.jpg'.format(dt + "_" + desc)
     # 如果次数小于3次name加时间戳
     if os.path.exists(output + name):
-        if current_day_count <3:
+        if current_day_count < current_day_limit:
             name = '{}_{}_{}.jpg'.format(dt, desc, current_day_count)
         else:
             print("{}-{} exists".format(dt, desc))
@@ -107,7 +108,7 @@ def job():
     ts = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
 
     # every day limit
-    if current_day_count >= 5:
+    if current_day_count >= current_day_limit:
         print("{} - every day limit. day: {}, day-total: {}".format(ts, current_day, current_day_count))
         return False
     # touch every count limit
@@ -123,7 +124,8 @@ def job():
     r_int = r.randint(1, 100)
     if r_int > 50:
         print('{} - {}%, execute auto-commit...'.format(ts, r_int))
-        rlt = execute_commit()
+        # rlt = execute_commit()
+        rlt = True
         if rlt:
             current_day_count += 1
     else:
