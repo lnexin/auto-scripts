@@ -49,7 +49,7 @@ def dump_bing_wp():
     # 如果次数小于3次name加时间戳
     if os.path.exists(output + name):
         if current_day_count <3:
-            name = '{}_{}.jpg'.format(name, current_day_count)
+            name = '{}_{}_{}.jpg'.format(dt, desc, current_day_count)
         else:
             print("{}-{} exists".format(dt, desc))
             return "exists"
