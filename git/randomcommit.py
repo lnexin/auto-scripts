@@ -124,8 +124,8 @@ def job():
     r_int = r.randint(1, 100)
     if r_int > 50:
         print('{} - {}%, execute auto-commit...'.format(ts, r_int))
-        # rlt = execute_commit()
-        rlt = True
+        rlt = execute_commit()
+        #rlt = True
         if rlt:
             current_day_count += 1
     else:
