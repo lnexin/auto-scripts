@@ -135,11 +135,11 @@ def job():
     return True
 
 
-schedule.every(10).seconds.do(job)
+#schedule.every(10).seconds.do(job)
 # 每隔10秒钟执行一次
 # schedule.every(1).minute.at(":02").do(job)
 # 每过2个小时的12分执行
-# schedule.every(2).hours.at(":12").do(job)
+schedule.every(2).hours.at(":12").do(job)
 
 while True:
     schedule.run_pending()
