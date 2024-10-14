@@ -3,7 +3,7 @@ import json
 import os
 import random
 import time
-
+import datetime
 import git
 import requests
 import schedule
@@ -61,12 +61,16 @@ def dump_bing_wp():
     out.write(img)
     return name
 
-
+# 拉图片任务
 def execute_commit():
     repo = git.Repo(git_repo_path)
     # update
     repo.git.pull()
 
+    allow = can_generate()
+    if not allow:
+        print("can not allow generate, not commit")
+        return False
     # get pict
     name = dump_bing_wp()
     if name is None:
@@ -100,6 +104,68 @@ def catch_exceptions(cancel_on_failure=False):
         return wrapper
 
     return catch_exceptions_decorator
+
+
+
+# 公共变量
+max_daily_generations = None
+current_generation_count = 0
+is_initialized = False
+
+def can_generate():
+    global max_daily_generations, current_generation_count, is_initialized
+
+    # 获取当前日期和是否为工作日的信息
+    today = datetime.datetime.now()
+    is_weekday = today.weekday() < 5  # 0-4 是工作日
+
+    # 初始化每日参数
+    if not is_initialized or today.hour == 0:
+        if is_weekday:
+            # 工作日：80% 几率大于 0，但不超过 30，总次数不能大于 3
+            if random.random() < 0.8:
+                max_daily_generations = random.randint(1, min(30, 3))
+            else:
+                max_daily_generations = 0
+        else:
+            # 非工作日：70% 的几率为 0，总次数不能大于 3
+            if random.random() < 0.7:
+                max_daily_generations = 0
+            else:
+                max_daily_generations = random.randint(1, 3)
+
+        current_generation_count = 0
+        is_initialized = True
+
+    # 检查是否达到最大生成次数
+    if current_generation_count >= max_daily_generations:
+        return False
+
+    # 检查是否允许生成
+    if is_weekday:
+        # 工作日首次允许的几率为 100%
+        if current_generation_count == 0:
+            current_generation_count += 1
+            return True
+        else:
+            # 几率随着次数增加而变小，但不低于 30%
+            chance = max(0.3, 1 - current_generation_count / max_daily_generations)
+            if random.random() < chance:
+                current_generation_count += 1
+                return True
+    else:
+        # 非工作日允许的几率不变，但不大于 30%
+        if random.random() < 0.3:
+            current_generation_count += 1
+            return True
+
+    return False
+
+
+def generate_random_number():
+    timestamp = int(time.time())
+    random_number = random.getrandbits(54)  # 54 bits of randomness
+    return (timestamp << 54) | random_number
 
 
 @catch_exceptions(cancel_on_failure=False)
