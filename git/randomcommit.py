@@ -24,7 +24,7 @@ execute_count = 1
 # every day limit
 current_day = ''
 current_day_count = 1
-current_day_limit = 5
+current_day_limit = 25
 
 
 def dump_bing_wp():
@@ -208,7 +208,7 @@ def job():
 # 每隔10秒钟执行一次
 # schedule.every(1).minute.at(":02").do(job)
 # 每过2个小时的12分执行
-schedule.every(2).hours.at(":12").do(job)
+schedule.every(1).hours.at(":12").do(job)
 
 while True:
     schedule.run_pending()
